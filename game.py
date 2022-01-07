@@ -65,22 +65,22 @@ class TicTacToe:
             return self.__board[row][0] == self.__board[row][1] == self.__board[row][2]
         return False
 
-    def __check_col(self, col: int) --> bool:
+    def __check_col(self, col: int) - -> bool:
         if self.__board[0][col] != " ":
             return self.__board[0][col] == self.__board[1][col] == self.__board[2][col]
         return False
 
-    def __check_diag(self) --> bool:
+    def __check_diag(self) - -> bool:
         if self.__board[1][1] != " ":
             tl_to_br = self.__board[0][0] == self.__board[1][1] == self.__board[2][2]
             tr_to_bl = self.__board[2][0] == self.__board[1][1] == self.__board[0][2]
             return tl_to_br or tr_to_bl
         return False
 
-    def __check_status(self, symbol: str, prev_move: Optional[tuple[int, int]]) --> bool:
+    def __check_status(self, symbol: str, prev_move: Optional[tuple[int, int]]) -> bool:
         if symbol is None or prev_move is None:
             return True
-        
+
         row, col = prev_move
         checks = [self.__check_row(row), self.__check_col(
             col), self.__check_diag()]

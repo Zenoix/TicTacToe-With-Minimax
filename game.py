@@ -1,3 +1,4 @@
+import sys
 import random
 import re
 from typing import Optional, Union
@@ -21,8 +22,8 @@ class TicTacToe:
         print("\n" + "\n---+---+---\n".join(" " + " | ".join(row)
                                             for row in self.__board) + "\n")
 
-    def __make_player_move(self, symbol: str) -> tuple[int, int]:
-        prompt = f'Player {symbol}, Enter coordinate in the form "row col": '
+    def __make_player_move(self, player: str) -> tuple[int, int]:
+        prompt = f'Player {player}, Enter coordinate in the form "row col": '
 
         coords = input(prompt).strip()
         while not (coords := self.__check_valid_move(coords)):
@@ -46,11 +47,11 @@ class TicTacToe:
         else:
             return row, col
 
-    def __change_board(self, symbol: str, coords: tuple[int, int]) -> None:
-        self.__board[coords[0]][coords[1]] = symbol
+    def __change_board(self, coords: tuple[int, int]) -> None:
+        self.__board[coords[0]][coords[1]] = self.__current_player
         self.__empty_squares -= 1
         self.__print_board()
-        self.__check_status()
+        self.__check_status(coords)
 
     def __find_empty_squares(self) -> Optional[list[tuple[int, int]]]:
         empty_squares = []
@@ -65,27 +66,27 @@ class TicTacToe:
             return self.__board[row][0] == self.__board[row][1] == self.__board[row][2]
         return False
 
-    def __check_col(self, col: int) - -> bool:
+    def __check_col(self, col: int) -> bool:
         if self.__board[0][col] != " ":
             return self.__board[0][col] == self.__board[1][col] == self.__board[2][col]
         return False
 
-    def __check_diag(self) - -> bool:
+    def __check_diag(self) -> bool:
         if self.__board[1][1] != " ":
             tl_to_br = self.__board[0][0] == self.__board[1][1] == self.__board[2][2]
             tr_to_bl = self.__board[2][0] == self.__board[1][1] == self.__board[0][2]
             return tl_to_br or tr_to_bl
         return False
 
-    def __check_status(self, symbol: str, prev_move: Optional[tuple[int, int]]) -> bool:
-        if symbol is None or prev_move is None:
+    def __check_status(self, prev_move: Optional[tuple[int, int]]) -> bool:
+        if prev_move is None:
             return True
 
         row, col = prev_move
         checks = [self.__check_row(row), self.__check_col(
             col), self.__check_diag()]
         if any(checks):
-            print(f"{symbol} has won!")
+            print(f"{self.__current_player} has won!")
             return False
         elif self.__empty_squares == 0:
             print("Tie!")
@@ -97,25 +98,55 @@ class TicTacToe:
         self.__coords = None
 
     def play(self):
-        self.__setup_game()
+        menu = """Welcome to my TicTacToe Game!
+Please select a game mode using the names:
+    - pvp
+    - ai
+    - quit"""
+        print(menu)
+        while True:
+            mode = input("Selection (pvp, ai, quit): ").strip().lower()
+            print()
+            if mode in ("pvp", "ai", "quit"):
+                break
+            else:
+                print("Invalid selection.\n")
+        if mode == "quit":
+            sys.exit()
+        elif mode == "pvp":
+            self.__setup_game()
+            self.__play_pvp()
+        else:
+            while True:
+                difficulty = input("Difficulty (easy, advanced): ").strip().lower()
+                print()
+                if difficulty in ("easy", "advanced"):
+                    self.__setup_game()
+                    break
+                else:
+                    print("Invalid selection.\n")
+            if difficulty == "easy":
+                self.__play_ai(level=0)
+            else:
+                self.__play_ai(level=1)
 
-    def play_pvp(self) -> None:
-        while self.__check_status(player, self.coords):
-            self.coords = self.__make_player_move(player)
-            self.__change_board(player, self.coords)
-            player = "X" if player == "O" else "O"
+    def __play_pvp(self) -> None:
+        while self.__check_status(self.__coords):
+            self.__coords = self.__make_player_move(self.__current_player)
+            self.__change_board(self.__coords)
+            self.__current_player = "X" if self.__current_player == "O" else "O"
 
-    def play_ai(self, level: int = 0) -> None:
+    def __play_ai(self, level: int = 0) -> None:
         player_symbol = random.choice(["X", "O"])
-        while self.__check_status(self.__current_player, self.coords):
+        while self.__check_status(self.__coords):
             if player_symbol == self.__current_player:
-                self.coords = self.__make_player_move(player_symbol)
+                self.__coords = self.__make_player_move(player_symbol)
             elif level == 0:
                 possible_squares = self.__find_empty_squares()
-                self.coords = random.choice(possible_squares)
+                self.__coords = random.choice(possible_squares)
                 print(
-                    f"The AI has decided to go ({self.coords[0]+1}, {self.coords[1]+1}).")
-            self.__change_board(self.__current_player, self.coords)
+                    f"The AI has decided to go ({self.__coords[0]+1}, {self.__coords[1]+1}).")
+            self.__change_board(self.__coords)
             self.__current_player = "X" if self.__current_player == "O" else "O"
 
 

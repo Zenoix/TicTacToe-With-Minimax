@@ -24,6 +24,9 @@ class TicTacToe:
 
     def get_current_player(self) -> str:
         return self.__current_player
+    
+    def get_status(self) -> int:
+        return self.__check_status(self.__coords)
 
     def __print_board(self) -> None:
         print("\n" + "\n---+---+---\n".join(" " + " | ".join(row)
@@ -86,6 +89,7 @@ class TicTacToe:
         return False
 
     def __check_status(self, prev_move: Optional[tuple[int, int]]) -> bool:
+        # TODO Implement return values for minimax
         if prev_move is not None:
             row, col = prev_move
             checks = [self.__check_row(row), self.__check_col(
@@ -122,7 +126,7 @@ Please select a game mode using the names:
         else:
             while True:
                 difficulty = input(
-                    "Difficulty (easy, advanced): ").strip().lower()
+                    "Difficulty (easy, medium, advanced): ").strip().lower()
                 print()
                 if difficulty in ("easy", "advanced"):
                     break

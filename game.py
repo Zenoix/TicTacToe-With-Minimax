@@ -2,6 +2,7 @@ import sys
 import random
 import re
 from typing import Optional, Union
+import time
 
 
 class TicTacToe:
@@ -13,7 +14,7 @@ class TicTacToe:
         ]
 
         self.__empty_squares = 9
-        self.__print_board()
+        self.__game_ongoing = True
 
     def get_board(self) -> list[list[str, str, str]]:
         return self.__board
@@ -79,23 +80,22 @@ class TicTacToe:
         return False
 
     def __check_status(self, prev_move: Optional[tuple[int, int]]) -> bool:
-        if prev_move is None:
-            return True
-
-        row, col = prev_move
-        checks = [self.__check_row(row), self.__check_col(
-            col), self.__check_diag()]
-        if any(checks):
-            print(f"{self.__current_player} has won!")
-            return False
-        elif self.__empty_squares == 0:
-            print("Tie!")
-            return False
-        return True
+        if prev_move is not None:
+            row, col = prev_move
+            checks = [self.__check_row(row), self.__check_col(
+                col), self.__check_diag()]
+            if any(checks):
+                print(f"{self.__current_player} has won!")
+                self.__game_ongoing = False
+            elif self.__empty_squares == 0:
+                print("Tie!")
+                self.__game_ongoing = False
 
     def __setup_game(self):
+        self.__print_board()
         self.__current_player = "X"
         self.__coords = None
+        time.sleep(1)
 
     def play(self):
         menu = """Welcome to my TicTacToe Game!
@@ -114,14 +114,13 @@ Please select a game mode using the names:
         if mode == "quit":
             sys.exit()
         elif mode == "pvp":
-            self.__setup_game()
             self.__play_pvp()
         else:
             while True:
-                difficulty = input("Difficulty (easy, advanced): ").strip().lower()
+                difficulty = input(
+                    "Difficulty (easy, advanced): ").strip().lower()
                 print()
                 if difficulty in ("easy", "advanced"):
-                    self.__setup_game()
                     break
                 else:
                     print("Invalid selection.\n")
@@ -131,14 +130,18 @@ Please select a game mode using the names:
                 self.__play_ai(level=1)
 
     def __play_pvp(self) -> None:
-        while self.__check_status(self.__coords):
+        self.__setup_game()
+        while self.__game_ongoing:
             self.__coords = self.__make_player_move(self.__current_player)
             self.__change_board(self.__coords)
             self.__current_player = "X" if self.__current_player == "O" else "O"
 
     def __play_ai(self, level: int = 0) -> None:
         player_symbol = random.choice(["X", "O"])
-        while self.__check_status(self.__coords):
+        print(f"You are Player {player_symbol}.")
+        time.sleep(2)
+        self.__setup_game()
+        while self.__game_ongoing:
             if player_symbol == self.__current_player:
                 self.__coords = self.__make_player_move(player_symbol)
             elif level == 0:

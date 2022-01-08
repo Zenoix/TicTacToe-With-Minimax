@@ -3,6 +3,7 @@ import random
 import re
 from typing import Optional, Union
 import time
+import minimax
 
 
 class TicTacToe:
@@ -14,10 +15,15 @@ class TicTacToe:
         ]
 
         self.__empty_squares = 9
+        self.__current_player = "X"
+        self.__coords = None
         self.__game_ongoing = True
 
     def get_board(self) -> list[list[str, str, str]]:
         return self.__board
+
+    def get_current_player(self) -> str:
+        return self.__current_player
 
     def __print_board(self) -> None:
         print("\n" + "\n---+---+---\n".join(" " + " | ".join(row)
@@ -93,8 +99,6 @@ class TicTacToe:
 
     def __setup_game(self):
         self.__print_board()
-        self.__current_player = "X"
-        self.__coords = None
         time.sleep(1)
 
     def play(self):
@@ -154,5 +158,4 @@ Please select a game mode using the names:
 
 
 if __name__ == "__main__":
-    ttt = TicTacToe()
-    ttt.play()
+    print("This script is not supposed to be run directly. Please use 'main.py'.")

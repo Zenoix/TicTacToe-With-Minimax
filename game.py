@@ -3,7 +3,6 @@ import random
 import re
 from typing import Optional, Union
 import time
-import minimax
 
 
 class TicTacToe:
@@ -15,16 +14,20 @@ class TicTacToe:
         ]
 
         self.__empty_squares = 9
+        self.__gamemode = None
         self.__current_player = "X"
+        self.__player_symbol = None
+        self.__ai_symbol = None
         self.__coords = None
         self.__game_ongoing = True
+        self.__winner = None  # "X" for X, "O" for O, "Tie" for tie
 
     def get_board(self) -> list[list[str, str, str]]:
         return self.__board
 
     def get_current_player(self) -> str:
         return self.__current_player
-    
+
     def get_status(self) -> int:
         return self.__check_status(self.__coords)
 
@@ -89,17 +92,32 @@ class TicTacToe:
         return False
 
     def __check_status(self, prev_move: Optional[tuple[int, int]]) -> bool:
-        # TODO Implement return values for minimax
+        # TODO debug return values
         if prev_move is not None:
+            print("here")
             row, col = prev_move
             checks = [self.__check_row(row), self.__check_col(
                 col), self.__check_diag()]
             if any(checks):
-                print(f"{self.__current_player} has won!")
                 self.__game_ongoing = False
+                if self.__gamemode == "pvp":
+                    print(f"{self.__current_player} has won!")
+                elif self.__gamemode == "ai0" and self.__current_player == self.__player_symbol:
+                    print("You've won!")
+                elif self.__gamemode == "ai0" and self.__current_player == self.__ai_symbol:
+                    print("Sadly, the computer has beaten you.")
+                else:
+                    if self.__current_player == self.__player_symbol:
+                        return -5
+                    else:
+                        return 5
             elif self.__empty_squares == 0:
-                print("Tie!")
+                if self.__gamemode != "ai1":
+                    print("Tie!")
+                else:
+                    return 0
                 self.__game_ongoing = False
+        return None
 
     def __setup_game(self):
         self.__print_board()
@@ -122,20 +140,22 @@ Please select a game mode using the names:
         if mode == "quit":
             sys.exit()
         elif mode == "pvp":
+            self.__gamemode = "pvp"
             self.__play_pvp()
         else:
             while True:
                 difficulty = input(
                     "Difficulty (easy, medium, advanced): ").strip().lower()
                 print()
-                if difficulty in ("easy", "advanced"):
+                if difficulty in ("easy", "medium", "advanced"):
                     break
                 else:
                     print("Invalid selection.\n")
             if difficulty == "easy":
-                self.__play_ai(level=0)
+                self.__gamemode = "ai0"
             else:
-                self.__play_ai(level=1)
+                self.__gamemode = "ai1"
+            self.__play_ai()
 
     def __play_pvp(self) -> None:
         self.__setup_game()
@@ -144,21 +164,62 @@ Please select a game mode using the names:
             self.__change_board(self.__coords)
             self.__current_player = "X" if self.__current_player == "O" else "O"
 
-    def __play_ai(self, level: int = 0) -> None:
-        player_symbol = random.choice(["X", "O"])
-        print(f"You are Player {player_symbol}.")
+    def __play_ai(self) -> None:
+        self.__player_symbol = random.choice(["X", "O"])
+        self.__ai_symbol = {"X", "O"} - set(self.__player_symbol)
+        print(f"You are Player {self.__player_symbol}.")
         time.sleep(2)
         self.__setup_game()
         while self.__game_ongoing:
-            if player_symbol == self.__current_player:
-                self.__coords = self.__make_player_move(player_symbol)
-            elif level == 0:
-                possible_squares = self.__find_empty_squares()
-                self.__coords = random.choice(possible_squares)
-                print(
-                    f"The AI has decided to go ({self.__coords[0]+1}, {self.__coords[1]+1}).")
+            if self.__player_symbol == self.__current_player:
+                self.__coords = self.__make_player_move(self.__player_symbol)
+            else:
+                if self.__gamemode == "ai0":
+                    possible_squares = self.__find_empty_squares()
+                    self.__coords = random.choice(possible_squares)
+                else:
+                    self.__find_best_move()
+                    print(
+                        f"The AI has decided to go ({self.__coords[0]+1}, {self.__coords[1]+1}).")
+
             self.__change_board(self.__coords)
             self.__current_player = "X" if self.__current_player == "O" else "O"
+
+    def __find_best_move(self):
+        best_evaluation = float("-infinity")
+        for square_row, square_col in self.__find_empty_squares():
+            self.__board[square_row][square_col] = self.__ai_symbol
+            curr_evaluation = self.__minimax(3, True)
+            self.__board[square_row][square_col] = " "
+            if curr_evaluation > best_evaluation:
+                best_evaluation = curr_evaluation
+                best_move = (square_row, square_col)
+        self.__coords = best_move
+
+    # Computer is maximising player
+    # Human is minimising player
+    def __minimax(self, depth, maximizingPlayer):
+        print(self.__coords)
+        evaluation = self.__check_status(self.__coords)
+
+        if depth == 0 or evaluation is None:
+            return evaluation
+        if maximizingPlayer:
+            max_evaluation = float("-infinity")
+            for square_row, square_col in self.__find_empty_squares():
+                self.__board[square_row][square_col] = self.__ai_symbol
+                evaluation = self.__minimax(self.__board, depth - 1, False)
+                max_evaluation = max(max_evaluation, evaluation)
+                self.__board[square_row][square_col] = " "
+            return max_evaluation
+        else:
+            min_evaluation = float("infinity")
+            for square_row, square_col in self.__find_empty_squares():
+                self.__board[square_row][square_col] = self.__player_symbol
+                evaluation = self.__minimax(self.__board, depth - 1, True)
+                max_evaluation = min(max_evaluation, evaluation)
+                self.__board[square_row][square_col] = " "
+            return min_evaluation
 
 
 if __name__ == "__main__":

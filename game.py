@@ -94,7 +94,6 @@ class TicTacToe:
     def __check_status(self, prev_move: Optional[tuple[int, int]]) -> bool:
         # TODO debug return values
         if prev_move is not None:
-            print("here")
             row, col = prev_move
             checks = [self.__check_row(row), self.__check_col(
                 col), self.__check_diag()]
@@ -116,7 +115,6 @@ class TicTacToe:
                     print("Tie!")
                 else:
                     return 0
-                self.__game_ongoing = False
         return None
 
     def __setup_game(self):
@@ -189,7 +187,8 @@ Please select a game mode using the names:
         best_evaluation = float("-infinity")
         for square_row, square_col in self.__find_empty_squares():
             self.__board[square_row][square_col] = self.__ai_symbol
-            curr_evaluation = self.__minimax(3, True)
+            curr_evaluation = self.__minimax(1, True)
+            print(f"curr_evaluation = {curr_evaluation}")
             self.__board[square_row][square_col] = " "
             if curr_evaluation > best_evaluation:
                 best_evaluation = curr_evaluation
@@ -199,16 +198,15 @@ Please select a game mode using the names:
     # Computer is maximising player
     # Human is minimising player
     def __minimax(self, depth, maximizingPlayer):
-        print(self.__coords)
         evaluation = self.__check_status(self.__coords)
-
-        if depth == 0 or evaluation is None:
+        if depth == 0 or self.__coords is not None:
             return evaluation
         if maximizingPlayer:
             max_evaluation = float("-infinity")
             for square_row, square_col in self.__find_empty_squares():
                 self.__board[square_row][square_col] = self.__ai_symbol
-                evaluation = self.__minimax(self.__board, depth - 1, False)
+                evaluation = self.__minimax(depth - 1, False)
+                print(f"evaluation = {evaluation}")
                 max_evaluation = max(max_evaluation, evaluation)
                 self.__board[square_row][square_col] = " "
             return max_evaluation
@@ -216,7 +214,7 @@ Please select a game mode using the names:
             min_evaluation = float("infinity")
             for square_row, square_col in self.__find_empty_squares():
                 self.__board[square_row][square_col] = self.__player_symbol
-                evaluation = self.__minimax(self.__board, depth - 1, True)
+                evaluation = self.__minimax(depth - 1, True)
                 max_evaluation = min(max_evaluation, evaluation)
                 self.__board[square_row][square_col] = " "
             return min_evaluation

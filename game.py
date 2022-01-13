@@ -23,15 +23,6 @@ class TicTacToe:
         self.__best_move = None
         self.__winner = None  # "X" for X, "O" for O, "Tie" for tie
 
-    def get_board(self) -> list[list[str, str, str]]:
-        return self.__board
-
-    def get_current_player(self) -> str:
-        return self.__current_player
-
-    def get_status(self) -> int:
-        return self.__check_status(self.__coords)
-
     def __print_board(self) -> None:
         print("\n" + "\n---+---+---\n".join(" " + " | ".join(row)
                                             for row in self.__board) + "\n")
@@ -40,7 +31,7 @@ class TicTacToe:
         prompt = f'Player {player}, Enter coordinate in the form "row col": '
 
         coords = input(prompt).strip()
-        while not (coords := self.__check_valid_move(coords)):
+        while not self.__check_valid_move(coords):
             coords = input(prompt).strip()
 
         return coords
@@ -59,7 +50,7 @@ class TicTacToe:
             print("Invalid input: Space already taken.\n")
             return False
         else:
-            return row, col
+            return True
 
     def __change_board(self, coords: tuple[int, int]) -> None:
         self.__board[coords[0]][coords[1]] = self.__current_player
@@ -67,7 +58,7 @@ class TicTacToe:
         self.__print_board()
         self.__check_status(coords)
 
-    def __find_empty_squares(self) -> Optional[list[tuple[int, int]]]:
+    def __find_empty_squares(self) -> list[tuple[int, int]]:
         empty_squares = []
         for i, _ in enumerate(self.__board):
             for j, square in enumerate(self.__board[i]):
@@ -92,42 +83,38 @@ class TicTacToe:
             return tl_to_br or tr_to_bl
         return False
 
-    def __check_status(self, prev_move: Optional[tuple[int, int]]) -> bool:
+    def __check_status(self, minimax_mode: bool = False) -> Union[None, int]:
         # TODO debug return values
-        if prev_move is not None:
-            row, col = prev_move
-            checks = [self.__check_row(row), self.__check_col(
-                col), self.__check_diag()]
-            if any(checks):
+        row, col = self.__coords
+        if any([self.__check_row(row), self.__check_col(col),
+                self.__check_diag()]):
+            if not minimax_mode:
                 self.__game_ongoing = False
-                if self.__gamemode == "pvp":
-                    print(f"{self.__current_player} has won!")
-                elif self.__gamemode == "ai0" and self.__current_player == self.__player_symbol:
-                    print("You've won!")
-                elif self.__gamemode == "ai0" and self.__current_player == self.__ai_symbol:
-                    print("Sadly, the computer has beaten you.")
+                print(f"Player {self.__current_player} has won!")
+            else:
+                if self.__current_player == self.__ai_symbol:
+                    return 5
                 else:
-                    if self.__current_player == self.__player_symbol:
-                        return -5
-                    else:
-                        return 5
-            elif self.__empty_squares == 0:
-                if self.__gamemode != "ai1":
-                    print("Tie!")
-                else:
-                    return 0
-        return None
+                    return -5
+        elif self.__empty_squares == 0:
+            if not minimax_mode:
+                self.__game_ongoing = False
+                print("Tie!")
+            else:
+                return 0
+
+
+            
+        
 
     def __setup_game(self):
         self.__print_board()
         time.sleep(1)
 
     def play(self):
-        menu = """Welcome to my TicTacToe Game!
-Please select a game mode using the names:
-    - pvp
-    - ai
-    - quit"""
+        menu = ("Welcome to my TicTacToe Game!\n" +
+                "Please select a game mode using the names:\n" +
+                " - pvp\n - ai\n - quit")
         print(menu)
         while True:
             mode = input("Selection (pvp, ai, quit): ").strip().lower()
@@ -222,7 +209,7 @@ Please select a game mode using the names:
         #             max_evaluation = min(min_evaluation, evaluation)
         #             self.__board[square_row][square_col] = " "
         #         return min_evaluation
-    
+
     def __find_best_move(self):
         self.__minimax(True)
         self.__change_board(self.__coords)

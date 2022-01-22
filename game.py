@@ -170,6 +170,7 @@ class TicTacToe:
                     f"The AI has decided to go ({self.__coords[0]+1}, {self.__coords[1]+1}).")
 
             self.__change_board(self.__coords)
+            self.__check_status()
             self.__current_player = "X" if self.__current_player == "O" else "O"
 
     def __find_best_move(self):

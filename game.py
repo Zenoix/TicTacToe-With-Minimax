@@ -85,6 +85,8 @@ class TicTacToe:
 
     def __check_status(self, minimax_mode: bool = False) -> Union[None, int]:
         # TODO debug return values
+        if not self.__coords:
+            return
         row, col = self.__coords
         if any([self.__check_row(row), self.__check_col(col),
                 self.__check_diag()]):
@@ -97,11 +99,11 @@ class TicTacToe:
                 else:
                     return -5
         elif self.__empty_squares == 0:
+            print(self.__board)
             if not minimax_mode:
                 self.__game_ongoing = False
                 print("Tie!")
-            else:
-                return 0
+            return 0
 
     def __setup_game(self):
         self.__print_board()
@@ -161,10 +163,10 @@ class TicTacToe:
                     possible_squares = self.__find_empty_squares()
                     self.__coords = random.choice(possible_squares)
                 elif self.__gamemode == "ai1":
-                    # self.__find_best_move(3)
+                    self.__find_best_move(3)
                     pass
                 else:
-                    # self.__find_best_move(5)
+                    self.__find_best_move(5)
                     pass
                 print(
                     f"The AI has decided to go ({self.__coords[0]+1}, {self.__coords[1]+1}).")
@@ -173,31 +175,32 @@ class TicTacToe:
             self.__check_status()
             self.__current_player = "X" if self.__current_player == "O" else "O"
 
-    def __find_best_move(self):
-        self.__minimax(True)
-        self.__change_board(self.__coords)
+    def __find_best_move(self, depth: int) -> None:
+        self.__minimax(True, depth)
 
-    def __minimax(self, maximizing_player):
-        curr_evaluation = self.__check_status(self.__coords)
-        if curr_evaluation is not None:
+    def __minimax(self, maximizing_player: bool, depth: int) -> None:
+        curr_evaluation = self.__check_status(True)
+        if curr_evaluation is not None or depth == 0:
             return curr_evaluation
         if maximizing_player:
             max_evaluation = float("-infinity")
             for square_row, square_col in self.__find_empty_squares():
                 self.__board[square_row][square_col] = self.__ai_symbol
-                curr_evaluation = self.__minimax(False)
+                curr_evaluation = self.__minimax(False, depth - 1)
                 if curr_evaluation > max_evaluation:
                     self.__coords = (square_row, square_col)
                     max_evaluation = curr_evaluation
+                self.__board[square_row][square_col] = " "
             return max_evaluation
         else:
             min_evaluation = float("infinity")
             for square_row, square_col in self.__find_empty_squares():
                 self.__board[square_row][square_col] = self.__player_symbol
-                curr_evaluation = self.__minimax(True)
+                curr_evaluation = self.__minimax(True, depth - 1)
                 if curr_evaluation < min_evaluation:
                     self.__coords = (square_row, square_col)
                     min_evaluation = curr_evaluation
+                self.__board[square_row][square_col] = " "
             return min_evaluation
 
 

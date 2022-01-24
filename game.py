@@ -84,7 +84,6 @@ class TicTacToe:
         return False
 
     def __check_status(self, minimax_mode: bool = False) -> Union[None, int]:
-        # TODO debug return values
         if not self.__coords:
             return
         row, col = self.__coords
@@ -95,9 +94,9 @@ class TicTacToe:
                 print(f"Player {self.__current_player} has won!")
             else:
                 if self.__current_player == self.__ai_symbol:
-                    return 5
+                    return 10
                 else:
-                    return -5
+                    return -10
         elif self.__empty_squares == 0:
             print(self.__board)
             if not minimax_mode:
@@ -129,9 +128,9 @@ class TicTacToe:
         else:
             while True:
                 difficulty = input(
-                    "Difficulty (easy, medium, advanced): ").strip().lower()
+                    "Difficulty (easy, hard): ").strip().lower()
                 print()
-                if difficulty in ("easy", "medium", "advanced"):
+                if difficulty in ("easy", "hard"):
                     break
                 else:
                     print("Invalid selection.\n")
@@ -162,12 +161,8 @@ class TicTacToe:
                 if self.__gamemode == "ai0":
                     possible_squares = self.__find_empty_squares()
                     self.__coords = random.choice(possible_squares)
-                elif self.__gamemode == "ai1":
-                    self.__find_best_move(3)
-                    pass
                 else:
-                    self.__find_best_move(5)
-                    pass
+                    self.__find_best_move()
                 print(
                     f"The AI has decided to go ({self.__coords[0]+1}, {self.__coords[1]+1}).")
 
@@ -175,18 +170,27 @@ class TicTacToe:
             self.__check_status()
             self.__current_player = "X" if self.__current_player == "O" else "O"
 
-    def __find_best_move(self, depth: int) -> None:
-        self.__minimax(True, depth)
+    def __find_best_move(self) -> None:
+        best_eval = float("-infinity")
+        best_move = None
+        for square_row, square_col in self.__find_empty_squares():
+            self.__board[square_row][square_col] = self.__ai_symbol
+            curr_eval = self.__minimax(True)
+            self.__board[square_row][square_col] = " "
+            if curr_eval > best_eval:
+                best_eval = curr_eval
+                best_move = (square_row, square_col)
+        self.__coords = best_move
 
-    def __minimax(self, maximizing_player: bool, depth: int) -> None:
+    def __minimax(self, maximizing_player: bool) -> None:
         curr_evaluation = self.__check_status(True)
-        if curr_evaluation is not None or depth == 0:
+        if curr_evaluation is not None:
             return curr_evaluation
         if maximizing_player:
             max_evaluation = float("-infinity")
             for square_row, square_col in self.__find_empty_squares():
                 self.__board[square_row][square_col] = self.__ai_symbol
-                curr_evaluation = self.__minimax(False, depth - 1)
+                curr_evaluation = self.__minimax(False)
                 if curr_evaluation > max_evaluation:
                     self.__coords = (square_row, square_col)
                     max_evaluation = curr_evaluation
@@ -196,7 +200,7 @@ class TicTacToe:
             min_evaluation = float("infinity")
             for square_row, square_col in self.__find_empty_squares():
                 self.__board[square_row][square_col] = self.__player_symbol
-                curr_evaluation = self.__minimax(True, depth - 1)
+                curr_evaluation = self.__minimax(True)
                 if curr_evaluation < min_evaluation:
                     self.__coords = (square_row, square_col)
                     min_evaluation = curr_evaluation

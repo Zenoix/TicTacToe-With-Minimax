@@ -56,7 +56,6 @@ class TicTacToe:
         self.__board[coords[0]][coords[1]] = self.__current_player
         self.__empty_squares -= 1
         self.__print_board()
-        self.__check_status(coords)
 
     def __find_empty_squares(self) -> list[tuple[int, int]]:
         empty_squares = []
@@ -83,25 +82,30 @@ class TicTacToe:
             return tl_to_br or tr_to_bl
         return False
 
-    def __check_status(self, minimax_mode: bool = False) -> Union[None, int]:
+    def __check_status(self) -> None:
         if not self.__coords:
             return
         row, col = self.__coords
         if any([self.__check_row(row), self.__check_col(col),
                 self.__check_diag()]):
-            if not minimax_mode:
-                self.__game_ongoing = False
-                print(f"Player {self.__current_player} has won!")
-            else:
-                if self.__current_player == self.__ai_symbol:
-                    return 10
-                else:
-                    return -10
+            self.__game_ongoing = False
+            print(f"Player {self.__current_player} has won!")
         elif self.__empty_squares == 0:
             print(self.__board)
-            if not minimax_mode:
-                self.__game_ongoing = False
-                print("Tie!")
+            self.__game_ongoing = False
+            print("Tie!")
+        
+    def __minimax_evaluation(self) -> Union[None, int]:
+        if not self.__coords:
+            return
+        row, col = self.__coords
+        if any([self.__check_row(row), self.__check_col(col),
+                self.__check_diag()]):
+            if self.__current_player == self.__ai_symbol:
+                return 10
+            else:
+                return -10
+        elif self.__empty_squares == 0:
             return 0
 
     def __setup_game(self):
@@ -149,7 +153,8 @@ class TicTacToe:
             self.__current_player = "X" if self.__current_player == "O" else "O"
 
     def __play_ai(self) -> None:
-        self.__player_symbol = random.choice(["X", "O"])
+        # self.__player_symbol = random.choice(["X", "O"])
+        self.__player_symbol = "O"
         self.__ai_symbol = {"X", "O"} - set(self.__player_symbol)
         print(f"You are Player {self.__player_symbol}.")
         time.sleep(2)
@@ -175,35 +180,30 @@ class TicTacToe:
         best_move = None
         for square_row, square_col in self.__find_empty_squares():
             self.__board[square_row][square_col] = self.__ai_symbol
-            curr_eval = self.__minimax(True)
+            curr_eval = self.__minimax(0, True)
             self.__board[square_row][square_col] = " "
             if curr_eval > best_eval:
                 best_eval = curr_eval
+                print(curr_eval)
                 best_move = (square_row, square_col)
         self.__coords = best_move
 
-    def __minimax(self, maximizing_player: bool) -> None:
-        curr_evaluation = self.__check_status(True)
-        if curr_evaluation is not None:
-            return curr_evaluation
+    def __minimax(self, depth: int, maximizing_player: bool) -> None:
+        board_state = self.__minimax_evaluation()
+        if board_state is not None:
+            return board_state
         if maximizing_player:
-            max_evaluation = float("-infinity")
+            max_evaluation = -9999
             for square_row, square_col in self.__find_empty_squares():
                 self.__board[square_row][square_col] = self.__ai_symbol
-                curr_evaluation = self.__minimax(False)
-                if curr_evaluation > max_evaluation:
-                    self.__coords = (square_row, square_col)
-                    max_evaluation = curr_evaluation
+                max_evaluation = max(max_evaluation, self.__minimax(depth + 1, not maximizing_player))
                 self.__board[square_row][square_col] = " "
             return max_evaluation
         else:
-            min_evaluation = float("infinity")
+            min_evaluation = 9999
             for square_row, square_col in self.__find_empty_squares():
                 self.__board[square_row][square_col] = self.__player_symbol
-                curr_evaluation = self.__minimax(True)
-                if curr_evaluation < min_evaluation:
-                    self.__coords = (square_row, square_col)
-                    min_evaluation = curr_evaluation
+                min_evaluation = min(min_evaluation, self.__minimax(depth + 1, not maximizing_player))
                 self.__board[square_row][square_col] = " "
             return min_evaluation
 
